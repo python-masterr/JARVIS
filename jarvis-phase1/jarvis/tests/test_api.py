@@ -22,6 +22,31 @@ def test_docs_surface_disabled(client):
     assert client.get("/docs").status_code == 404 and client.get("/openapi.json").status_code == 404
 
 
+def test_cors_is_restricted_to_configured_website_origin(client):
+    preflight = client.options(
+        "/health",
+        headers={
+            "Origin": "https://python-masterr.github.io",
+            "Access-Control-Request-Method": "GET",
+            "Access-Control-Request-Headers": "authorization",
+            "Access-Control-Request-Private-Network": "true",
+        },
+    )
+    assert preflight.status_code == 200
+    assert preflight.headers["access-control-allow-origin"] == "https://python-masterr.github.io"
+    assert preflight.headers["access-control-allow-private-network"] == "true"
+
+    denied = client.options(
+        "/health",
+        headers={
+            "Origin": "https://untrusted.example",
+            "Access-Control-Request-Method": "GET",
+        },
+    )
+    assert "access-control-allow-origin" not in denied.headers
+    assert "access-control-allow-private-network" not in denied.headers
+
+
 def test_health(client):
     body = client.get("/health").json()
     assert body["status"] == "ok" and body["services"]["ClaudeService"]["status"] == "online"
