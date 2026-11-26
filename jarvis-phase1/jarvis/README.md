@@ -39,3 +39,6 @@ python -m pytest
 ```
 Data lives in `~/.jarvis` (override with `JARVIS_DATA_DIR`).
 Models: `JARVIS_SONNET_MODEL` / `JARVIS_OPUS_MODEL` (defaults `claude-sonnet-5-5`, `claude-opus-5-5`).
+
+## Website
+The static website is published at https://python-masterr.github.io/JARVIS/. It connects directly from your browser to the local API at `http://127.0.0.1:8750`; it does not host your memory or Anthropic API key. Start the API locally, then run `python -m jarvis_core show-token` and paste the token into the website. The API only allows browser requests from the published GitHub Pages origin by default. Override this with a comma-separated `JARVIS_CORS_ORIGINS` environment variable when using a different trusted website origin.

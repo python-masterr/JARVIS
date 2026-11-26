@@ -15,6 +15,13 @@ class Settings:
     data_dir: Path = field(default_factory=_default_data_dir)
     host: str = "127.0.0.1"  # loopback only; never bind elsewhere
     port: int = 8750
+    cors_origins: tuple[str, ...] = field(default_factory=lambda: tuple(
+        origin.strip()
+        for origin in os.environ.get(
+            "JARVIS_CORS_ORIGINS", "https://python-masterr.github.io"
+        ).split(",")
+        if origin.strip()
+    ))
     database_url: str | None = None
     claude_timeout_s: float = 60.0
     claude_max_retries: int = 4

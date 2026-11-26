@@ -8,6 +8,7 @@ from typing import Literal
 from fastapi import APIRouter, Depends, FastAPI, Header, HTTPException, Query
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
+from starlette.middleware.cors import CORSMiddleware
 
 from .. import __version__
 from ..claude import ClaudeNotConfiguredError, ClaudeService, ClaudeUnavailableError
@@ -57,6 +58,24 @@ def create_app(settings: Settings | None = None, storage: SecureStorage | None =
             raise HTTPException(401, "Authentication required", headers={"WWW-Authenticate": "Bearer"})
 
     app = FastAPI(title="JARVIS Core", version=__version__, docs_url=None, redoc_url=None, openapi_url=None)
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=list(settings.cors_origins),
+        allow_methods=["GET", "POST", "PATCH", "DELETE"],
+        allow_headers=["Authorization", "Content-Type"],
+    )
+
+    @app.middleware("http")
+    async def allow_private_network_preflight(request, call_next):
+        response = await call_next(request)
+        origin = request.headers.get("origin")
+        if (
+            origin in settings.cors_origins
+            and request.headers.get("access-control-request-private-network", "").lower() == "true"
+        ):
+            response.headers["Access-Control-Allow-Private-Network"] = "true"
+        return response
+
     app.state.memory, app.state.claude = memory, claude
     r = APIRouter(dependencies=[Depends(require_auth)])
 

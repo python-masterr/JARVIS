@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#111827">
+  <title>JARVIS — Your private AI assistant</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #0b1120;
+      color: #e5e7eb;
+      font-synthesis: none;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; background: radial-gradient(ellipse at 50% -20%, #1e3a5f 0, #0b1120 55%); }
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+    .shell { width: min(940px, calc(100% - 32px)); margin: 0 auto; padding: 48px 0 64px; }
+    header { display: flex; align-items: center; gap: 14px; margin-bottom: 30px; }
+    .mark { display: grid; width: 48px; height: 48px; place-items: center; border: 1px solid #38bdf8; border-radius: 15px; color: #7dd3fc; font-size: 23px; box-shadow: 0 0 28px #0ea5e933; }
+    h1 { margin: 0; font-size: 25px; letter-spacing: .12em; }
+    .tagline { margin: 4px 0 0; color: #94a3b8; font-size: 14px; }
+    .layout { display: grid; grid-template-columns: 280px minmax(0, 1fr); gap: 18px; }
+    .panel { border: 1px solid #263449; border-radius: 18px; background: #111a2bcc; box-shadow: 0 18px 50px #0003; }
+    .settings { padding: 20px; align-self: start; }
+    h2 { margin: 0 0 16px; font-size: 15px; letter-spacing: .03em; }
+    label { display: block; margin: 14px 0 7px; color: #aab8ca; font-size: 12px; font-weight: 600; }
+    input, select { width: 100%; min-height: 42px; padding: 10px 12px; border: 1px solid #334155; border-radius: 10px; outline: none; background: #0b1220; color: #e5e7eb; }
+    input:focus, select:focus, textarea:focus { border-color: #38bdf8; box-shadow: 0 0 0 3px #0ea5e922; }
+    .connect { width: 100%; margin-top: 16px; padding: 11px 14px; border: 0; border-radius: 10px; background: #0284c7; color: white; font-weight: 700; }
+    .connect:hover, .send:hover { background: #0369a1; }
+    .status { display: flex; align-items: center; gap: 8px; margin-top: 15px; color: #94a3b8; font-size: 12px; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: #64748b; }
+    .dot.online { background: #34d399; box-shadow: 0 0 10px #34d39988; }
+    .privacy { margin: 18px 0 0; padding-top: 15px; border-top: 1px solid #263449; color: #94a3b8; font-size: 12px; line-height: 1.6; }
+    .chat { min-height: 550px; display: flex; flex-direction: column; overflow: hidden; }
+    .chat-head { display: flex; align-items: center; justify-content: space-between; padding: 19px 22px; border-bottom: 1px solid #263449; }
+    .chat-head h2 { margin: 0; }
+    .clear { padding: 6px 9px; border: 1px solid #334155; border-radius: 8px; background: transparent; color: #aab8ca; font-size: 12px; }
+    .messages { display: flex; flex: 1; flex-direction: column; gap: 14px; padding: 22px; overflow-y: auto; }
+    .bubble { max-width: 88%; padding: 12px 14px; border: 1px solid #263449; border-radius: 13px; background: #182337; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .bubble.user { align-self: flex-end; border-color: #075985; background: #0c4a6e66; }
+    .bubble.assistant { align-self: flex-start; }
+    .welcome { margin: auto; max-width: 350px; color: #94a3b8; text-align: center; line-height: 1.7; }
+    .welcome strong { display: block; margin-bottom: 8px; color: #e5e7eb; font-size: 20px; }
+    .composer { padding: 16px; border-top: 1px solid #263449; }
+    .compose-row { display: flex; gap: 10px; align-items: flex-end; }
+    textarea { flex: 1; min-height: 46px; max-height: 150px; resize: vertical; padding: 12px; border: 1px solid #334155; border-radius: 11px; outline: none; background: #0b1220; color: #e5e7eb; font: inherit; }
+    .send { min-height: 46px; padding: 0 17px; border: 0; border-radius: 11px; background: #0284c7; color: white; font-weight: 700; }
+    .send:disabled { cursor: wait; opacity: .6; }
+    .options { display: flex; align-items: center; gap: 8px; margin-top: 11px; color: #94a3b8; font-size: 12px; }
+    .options input { width: 14px; min-height: auto; accent-color: #38bdf8; }
+    .error { display: none; margin: 0 16px 14px; padding: 11px 13px; border: 1px solid #7f1d1d; border-radius: 10px; background: #450a0a66; color: #fecaca; font-size: 13px; line-height: 1.5; }
+    footer { margin-top: 20px; color: #64748b; font-size: 12px; text-align: center; }
+    footer a { color: #7dd3fc; text-decoration: none; }
+    @media (max-width: 700px) {
+      .shell { padding-top: 28px; }
+      .layout { grid-template-columns: 1fr; }
+      .chat { min-height: 470px; }
+      .settings { order: 1; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header>
+      <div class="mark" aria-hidden="true">✦</div>
+      <div><h1>JARVIS</h1><p class="tagline">Your private AI assistant</p></div>
+    </header>
+    <div class="layout">
+      <aside class="panel settings" aria-label="Connection settings">
+        <h2>Connect your JARVIS</h2>
+        <label for="endpoint">Local API address</label>
+        <input id="endpoint" type="url" value="http://127.0.0.1:8750" autocomplete="url">
+        <label for="token">API token</label>
+        <input id="token" type="password" placeholder="Paste your local token" autocomplete="off">
+        <button id="connect" class="connect" type="button">Connect</button>
+        <div class="status" role="status"><span id="status-dot" class="dot"></span><span id="status-text">Not connected</span></div>
+        <p class="privacy">Your API token stays in this browser tab. Chat requests go directly to your JARVIS API; this website does not store or relay your conversations.</p>
+        <label for="model">Model</label>
+        <select id="model"><option value="sonnet">Sonnet</option><option value="opus">Opus</option></select>
+      </aside>
+      <section class="panel chat" aria-label="Chat with JARVIS">
+        <div class="chat-head"><h2>Conversation</h2><button id="clear" class="clear" type="button">Clear chat</button></div>
+        <div id="messages" class="messages" aria-live="polite">
+          <div class="welcome"><strong>At your service.</strong>Connect to your local JARVIS API, then send a message to get started.</div>
+        </div>
+        <div id="error" class="error" role="alert"></div>
+        <form id="form" class="composer">
+          <div class="compose-row">
+            <textarea id="message" rows="1" maxlength="50000" placeholder="Message JARVIS…" aria-label="Message" required></textarea>
+            <button id="send" class="send" type="submit">Send</button>
+          </div>
+          <label class="options"><input id="use-memory" type="checkbox" checked> Use safe public memories as context</label>
+        </form>
+      </section>
+    </div>
+    <footer>JARVIS runs on your computer. <a href="https://github.com/python-masterr/JARVIS">View the open-source project</a></footer>
+  </main>
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const messagesEl = $("messages");
+    const session = { history: [], connected: false };
+
+    function apiBase() {
+      return $("endpoint").value.trim().replace(/\/+$/, "");
+    }
+    function showError(text) {
+      const box = $("error");
+      box.textContent = text;
+      box.style.display = text ? "block" : "none";
+    }
+    function setStatus(online, text) {
+      $("status-dot").classList.toggle("online", online);
+      $("status-text").textContent = text;
+      session.connected = online;
+    }
+    function addMessage(role, content) {
+      const welcome = messagesEl.querySelector(".welcome");
+      if (welcome) welcome.remove();
+      const bubble = document.createElement("div");
+      bubble.className = `bubble ${role}`;
+      bubble.textContent = content;
+      messagesEl.appendChild(bubble);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+      return bubble;
+    }
+    async function request(path, options = {}) {
+      const token = $("token").value.trim();
+      if (!token) throw new Error("Enter your API token first. Run `python -m jarvis_core show-token` in your JARVIS installation to get it.");
+      const response = await fetch(`${apiBase()}${path}`, {
+        ...options,
+        headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json", ...options.headers }
+      });
+      if (!response.ok) {
+        const detail = await response.text();
+        throw new Error(`JARVIS returned ${response.status}${detail ? `: ${detail}` : ""}`);
+      }
+      return response.json();
+    }
+    $("connect").addEventListener("click", async () => {
+      showError("");
+      setStatus(false, "Connecting…");
+      try {
+        await request("/health");
+        setStatus(true, "Connected to local JARVIS");
+      } catch (error) {
+        setStatus(false, "Not connected");
+        showError(`${error.message} Check that JARVIS is running at ${apiBase()} and that the token is correct.`);
+      }
+    });
+    $("form").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const text = $("message").value.trim();
+      if (!text || $("send").disabled) return;
+      showError("");
+      addMessage("user", text);
+      $("message").value = "";
+      $("send").disabled = true;
+      const pending = addMessage("assistant", "Thinking…");
+      try {
+        const result = await request("/chat", {
+          method: "POST",
+          body: JSON.stringify({
+            message: text,
+            history: session.history,
+            model: $("model").value,
+            use_memory: $("use-memory").checked
+          })
+        });
+        pending.textContent = result.reply;
+        session.history.push({ role: "user", content: text }, { role: "assistant", content: result.reply });
+        setStatus(true, "Connected to local JARVIS");
+      } catch (error) {
+        pending.remove();
+        showError(error.message);
+        setStatus(false, "Connection error");
+      } finally {
+        $("send").disabled = false;
+        $("message").focus();
+      }
+    });
+    $("clear").addEventListener("click", () => {
+      session.history = [];
+      messagesEl.replaceChildren();
+      const welcome = document.createElement("div");
+      welcome.className = "welcome";
+      const title = document.createElement("strong");
+      title.textContent = "At your service.";
+      welcome.append(title, document.createTextNode("Your conversation history has been cleared."));
+      messagesEl.appendChild(welcome);
+      showError("");
+    });
+  </script>
+</body>
+</html>
